@@ -1,46 +1,30 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
 
-const Header = (): React.ReactNode => {
-  const linkClasses = "px-3 py-2 rounded-md text-sm font-medium transition-colors";
-  const activeLinkClass = 'bg-slate-700 text-white';
-  const inactiveLinkClass = 'text-slate-300 hover:bg-slate-800 hover:text-white';
+import React from 'react';
+import { Link, NavLink } from 'react-router-dom';
+
+export default function Header() {
+  const navLinkClasses = "px-3 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-colors";
+  const activeLinkClasses = "text-white bg-slate-800/50";
 
   return (
-    <header className="bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50 border-b border-slate-800">
+    <header className="bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50 border-b border-slate-700">
       <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
-            <NavLink to="/" className="text-2xl font-bold text-white tracking-tight hover:text-brand-400 transition-colors">
+            <Link to="/" className="text-2xl font-bold tracking-tight text-white hover:text-slate-300 transition-colors">
               @farleir
-            </NavLink>
+            </Link>
           </div>
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
-              <NavLink
-                to="/"
-                className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClass : inactiveLinkClass}`}
-              >
-                Início
-              </NavLink>
-              <NavLink
-                to="/projects"
-                className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClass : inactiveLinkClass}`}
-              >
+          <div className="flex items-center space-x-2">
+             <NavLink to="/projects" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeLinkClasses : ''}`}>
                 Projetos
               </NavLink>
-              <NavLink
-                to="/blog"
-                className={({ isActive }) => `${linkClasses} ${isActive ? activeLinkClass : inactiveLinkClass}`}
-              >
+              <NavLink to="/blog" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeLinkClasses : ''}`}>
                 Blog
               </NavLink>
-            </div>
           </div>
         </div>
       </nav>
     </header>
   );
 };
-
-export default Header;

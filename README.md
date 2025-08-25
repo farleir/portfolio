@@ -1,20 +1,138 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
 
-# Run and deploy your AI Studio app
+# Portfólio Pessoal & Blog - @farleir
 
-This contains everything you need to run your app locally.
+Este é o código-fonte completo para um portal pessoal, blog e área de projetos, construído com uma stack moderna e de alta performance, projetada para ser implantada na infraestrutura serverless da Cloudflare.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1xFu2JAi2jB7Hm304e3O-emhdPfpc8Sir
+## Stack Tecnológica
 
-## Run Locally
+- **Framework Full-Stack**: [Next.js 14+ (App Router)](https://nextjs.org/)
+- **Linguagem**: [TypeScript (Strict)](https://www.typescriptlang.org/)
+- **Plataforma de Deploy**: [Cloudflare Pages](https://pages.cloudflare.com/)
+- **Banco de Dados**: [Cloudflare D1 (SQLite)](https://developers.cloudflare.com/d1/)
+- **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
+- **Autenticação**: [Auth.js v5](https://authjs.dev/)
+- **Estilização e UI**: [Tailwind CSS](https://tailwindcss.com/) + [Shadcn/ui](https://ui.shadcn.com/)
 
-**Prerequisites:**  Node.js
+---
 
+## 🚀 Setup e Desenvolvimento Local
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Siga os passos abaixo para configurar o ambiente de desenvolvimento.
+
+### 1. Pré-requisitos
+
+- [Node.js](https://nodejs.org/) (versão 20.x ou superior)
+- [Git](https://git-scm.com/)
+- Uma conta na [Cloudflare](https://cloudflare.com/)
+
+### 2. Clonar o Repositório
+
+```bash
+git clone https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
+cd SEU_REPOSITORIO
+```
+
+### 3. Instalar Dependências
+
+```bash
+npm install
+```
+
+### 4. Configurar Variáveis de Ambiente
+
+Copie o arquivo `.env.example` para `.env.local` e preencha as variáveis:
+
+```bash
+cp .env.example .env.local
+```
+
+**Arquivo `.env.local`:**
+```env
+# Segredo para Auth.js (gere um com `openssl rand -base64 32`)
+AUTH_SECRET="SEU_AUTH_SECRET"
+
+# Provedor de Autenticação GitHub
+AUTH_GITHUB_ID="SEU_GITHUB_CLIENT_ID"
+AUTH_GITHUB_SECRET="SEU_GITHUB_CLIENT_SECRET"
+
+# Dica: Para o login com "Credentials", não são necessárias variáveis extras.
+```
+
+### 5. Configurar o Banco de Dados Cloudflare D1
+
+Este projeto utiliza o [Wrangler](https://developers.cloudflare.com/workers/wrangler/), a CLI da Cloudflare, para interagir com o D1 localmente.
+
+**a. Autenticação no Wrangler:**
+```bash
+npx wrangler login
+```
+
+**b. Criar o Banco de Dados D1 (se ainda não existir na Cloudflare):**
+```bash
+# O nome 'personal' já está configurado no wrangler.toml
+npx wrangler d1 create personal
+```
+
+**c. Aplicar o Schema SQL no Banco Remoto:**
+Execute o schema inicial no seu banco de dados D1 na Cloudflare.
+```bash
+npx wrangler d1 execute personal --file=./db/schema.sql
+```
+
+**d. Sincronizar o Drizzle com o Schema:**
+O Drizzle Kit irá gerar os arquivos de migração com base no seu schema em `db/schema.ts`.
+```bash
+npm run db:generate
+```
+
+**e. Aplicar Migrações (Push):**
+Este comando aplica as alterações do schema ao seu banco de dados D1 local e remoto.
+```bash
+# Para o banco local (usado por `npm run dev`)
+npm run db:push
+
+# Para o banco remoto (produção)
+npx wrangler d1 execute personal --file=./drizzle/0000_.../migration.sql
+```
+
+### 6. Iniciar o Servidor de Desenvolvimento
+
+O comando `dev` utiliza `wrangler pages dev` para emular o ambiente da Cloudflare Pages, incluindo o D1.
+
+```bash
+npm run dev
+```
+
+A aplicação estará disponível em `http://localhost:8788`.
+
+---
+
+## 📦 Deploy na Cloudflare Pages
+
+### 1. Publicar no GitHub
+
+Faça o commit e push do seu código para um repositório no GitHub.
+
+### 2. Conectar o Repositório ao Cloudflare Pages
+
+1. No painel da Cloudflare, vá para **Workers & Pages**.
+2. Clique em **Create application** > **Pages** > **Connect to Git**.
+3. Selecione seu repositório.
+4. Nas configurações de build, use as seguintes opções:
+   - **Framework preset**: `Next.js`
+   - **Build command**: `npm run build`
+   - **Build output directory**: `.next`
+
+### 3. Vincular o Banco de Dados D1
+
+1. Vá para as configurações do seu projeto no Cloudflare Pages (`Settings` > `Functions`).
+2. Em **D1 database bindings**, clique em **Add binding**.
+3. **Variable name**: `DB`
+4. **D1 database**: `personal` (selecione o banco que você criou).
+
+### 4. Configurar Variáveis de Ambiente em Produção
+
+1. Em `Settings` > `Environment variables`, adicione as mesmas variáveis do seu arquivo `.env.local` (`AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`).
+2. Clique em **Save and Deploy**.
+
+Seu site será implantado automaticamente a cada `push` na branch principal.
