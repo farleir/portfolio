@@ -38,17 +38,18 @@ export default async function BlogPostDetailPage({ params }: Props) {
   }
 
   return (
-    <article className="max-w-3xl mx-auto py-8 prose prose-invert prose-lg">
-      <header className="mb-8">
-        <Link href="/blog" className="text-primary hover:underline mb-4 inline-block">&larr; Voltar para o Blog</Link>
-        <h1 className="text-4xl font-extrabold text-primary tracking-tight">{post.title}</h1>
-        <p className="text-muted-foreground mt-2">
-          Por {post.author.name} em {new Date(post.publishedAt).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
-      </header>
-      
-      <MarkdownRenderer content={post.content} />
-
-    </article>
+    <div className="max-w-3xl mx-auto py-8">
+        <header className="mb-8">
+            <Link href="/blog" className="text-primary hover:underline mb-4 inline-block">&larr; Voltar para o Blog</Link>
+            <h1 className="text-4xl font-extrabold text-primary tracking-tight">{post.title}</h1>
+            <p className="text-muted-foreground mt-2">
+            Por {post.author.name} em {new Date(post.publishedAt).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+        </header>
+        
+        <article className="prose prose-invert prose-lg max-w-none prose-h1:text-primary prose-a:text-primary hover:prose-a:text-primary/80 prose-strong:text-foreground">
+             <MarkdownRenderer content={post.content} />
+        </article>
+    </div>
   );
 };

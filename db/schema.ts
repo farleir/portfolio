@@ -69,6 +69,7 @@ export const projects = sqliteTable('projects', {
     liveUrl: text('liveUrl'),
     repoUrl: text('repoUrl'),
     createdAt: integer('createdAt', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+    updatedAt: integer('updatedAt', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 });
 export type Project = typeof projects.$inferSelect;
 
@@ -78,8 +79,9 @@ export const blogPosts = sqliteTable('blog_posts', {
     title: text('title').notNull(),
     summary: text('summary').notNull(),
     content: text('content').notNull(),
-    publishedAt: integer('publishedAt', { mode: 'timestamp' }).notNull(),
+    publishedAt: integer('publishedAt', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
     authorId: text('authorId').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    updatedAt: integer('updatedAt', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 });
 export type BlogPost = typeof blogPosts.$inferSelect;
 

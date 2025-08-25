@@ -3,10 +3,15 @@
 
 import { GoogleGenAI } from '@google/genai';
 import { getBlogPosts, getProjects } from './data';
-import { signIn, signOut } from './auth';
+import { auth, signIn, signOut } from './auth';
+import { z } from 'zod';
+import { blogPostSchema, projectSchema } from './definitions';
+import { db } from './db';
+import { blogPosts, projects } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { revalidatePath } from 'next/cache';
 
-// A inicialização do cliente GenAI acontece DENTRO da Server Action,
-// garantindo que nunca seja exposta ao cliente.
+// --- Gemini AI Action ---
 const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY! });
 
 export async function askGemini(chatHistory: { role: 'user' | 'model', text: string }[], question: string) {
@@ -15,8 +20,8 @@ export async function askGemini(chatHistory: { role: 'user' | 'model', text: str
     }
 
     try {
-        const projects = await getProjects();
-        const blogPosts = await getBlogPosts();
+        const projectsData = await getProjects();
+        const blogPostsData = await getBlogPosts();
 
         const context = `
             Você é um assistente de IA para Farleir, um Principal Engineer e Arquiteto de Soluções Edge.
@@ -28,10 +33,10 @@ export async function askGemini(chatHistory: { role: 'user' | 'model', text: str
             - Foco: código limpo, modular, documentado, alta performance, DX e UX.
 
             Projetos em Destaque:
-            ${projects.map(p => `- ${p.title}: ${p.description}`).join('\n')}
+            ${projectsData.map(p => `- ${p.title}: ${p.description}`).join('\n')}
 
             Artigos do Blog:
-            ${blogPosts.map(b => `- ${b.title}: ${b.summary}`).join('\n')}
+            ${blogPostsData.map(b => `- ${b.title}: ${b.summary}`).join('\n')}
 
             Sempre responda em português do Brasil. Seja conciso e direto.
         `;
@@ -55,10 +60,125 @@ export async function askGemini(chatHistory: { role: 'user' | 'model', text: str
     }
 }
 
+// --- Auth Actions ---
 export async function signInWithGithub() {
-  await signIn('github');
+  await signIn('github', { redirectTo: '/admin' });
 }
 
 export async function doSignOut() {
-  await signOut();
+  await signOut({ redirectTo: '/' });
+}
+
+// --- Project Actions ---
+export async function createProject(values: z.infer<typeof projectSchema>) {
+    const session = await auth();
+    if (!session?.user) {
+        throw new Error('Não autorizado');
+    }
+
+    const validatedFields = projectSchema.safeParse(values);
+    if (!validatedFields.success) {
+        throw new Error('Campos inválidos');
+    }
+
+    await db.insert(projects).values({
+        ...validatedFields.data,
+        tags: validatedFields.data.tags.split(',').map(tag => tag.trim()),
+    });
+
+    revalidatePath('/projects');
+    revalidatePath('/admin/projects');
+}
+
+export async function updateProject(id: string, values: z.infer<typeof projectSchema>) {
+    const session = await auth();
+    if (!session?.user) {
+        throw new Error('Não autorizado');
+    }
+
+    const validatedFields = projectSchema.safeParse(values);
+    if (!validatedFields.success) {
+        throw new Error('Campos inválidos');
+    }
+
+    await db.update(projects).set({
+        ...validatedFields.data,
+        tags: validatedFields.data.tags.split(',').map(tag => tag.trim()),
+        updatedAt: new Date(),
+    }).where(eq(projects.id, id));
+
+    revalidatePath('/projects');
+    revalidatePath('/admin/projects');
+}
+
+export async function deleteProject(id: string) {
+    const session = await auth();
+    if (!session?.user) {
+        throw new Error('Não autorizado');
+    }
+    
+    await db.delete(projects).where(eq(projects.id, id));
+
+    revalidatePath('/projects');
+    revalidatePath('/admin/projects');
+}
+
+
+// --- Blog Post Actions ---
+export async function createBlogPost(values: z.infer<typeof blogPostSchema>) {
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) {
+        throw new Error('Não autorizado');
+    }
+
+    const validatedFields = blogPostSchema.safeParse(values);
+    if (!validatedFields.success) {
+        throw new Error('Campos inválidos');
+    }
+
+    await db.insert(blogPosts).values({
+        ...validatedFields.data,
+        authorId: userId,
+    });
+    
+    revalidatePath('/blog');
+    revalidatePath('/admin/blog');
+    revalidatePath(`/blog/${validatedFields.data.slug}`);
+}
+
+export async function updateBlogPost(slug: string, values: z.infer<typeof blogPostSchema>) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error('Não autorizado');
+    }
+
+    const validatedFields = blogPostSchema.safeParse(values);
+    if (!validatedFields.success) {
+        throw new Error('Campos inválidos');
+    }
+
+    await db.update(blogPosts).set({
+        ...validatedFields.data,
+        updatedAt: new Date(),
+    }).where(eq(blogPosts.slug, slug));
+
+    revalidatePath('/blog');
+    revalidatePath('/admin/blog');
+    revalidatePath(`/blog/${slug}`);
+    revalidatePath(`/blog/${validatedFields.data.slug}`);
+}
+
+
+export async function deleteBlogPost(slug: string) {
+    const session = await auth();
+    if (!session?.user) {
+        throw new Error('Não autorizado');
+    }
+    
+    await db.delete(blogPosts).where(eq(blogPosts.slug, slug));
+
+    revalidatePath('/blog');
+    revalidatePath('/admin/blog');
+    revalidatePath(`/blog/${slug}`);
 }

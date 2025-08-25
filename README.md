@@ -18,6 +18,14 @@ Esta versão segue estritamente as melhores práticas do Next.js App Router, pri
 
 ---
 
+## Funcionalidades
+
+- **Páginas Públicas**: Home, Projetos e Blog.
+- **Assistente de IA**: Um chatbot na home page que usa a API Gemini para responder perguntas sobre o perfil de Farleir.
+- **Painel de Administração (`/admin`)**: Uma área segura para gerenciar projetos e posts do blog (CRUD completo) usando Server Actions.
+
+---
+
 ## 🚀 Setup e Desenvolvimento Local
 
 Siga os passos abaixo para configurar o ambiente de desenvolvimento.
@@ -61,18 +69,25 @@ AUTH_GITHUB_SECRET="SEU_GITHUB_CLIENT_SECRET"
 
 # Chave de API para o Assistente de IA
 GOOGLE_API_KEY="SUA_CHAVE_DA_API_GEMINI"
+
+# Credenciais para Drizzle Kit (para interagir com o D1 remoto)
+# Necessário para `db:push`, `db:generate`, etc.
+CLOUDFLARE_ACCOUNT_ID="SEU_CLOUDFLARE_ACCOUNT_ID"
+CLOUDFLARE_DATABASE_ID="SEU_CLOUDFLARE_DATABASE_ID"
+CLOUDFLARE_D1_TOKEN="SEU_CLOUDFLARE_D1_API_TOKEN"
 ```
+> **Nota:** Você pode encontrar `ACCOUNT_ID` e `DATABASE_ID` no painel do seu banco D1 na Cloudflare. O `D1_TOKEN` pode ser criado em `My Profile > API Tokens`.
 
 ### 5. Configurar o Banco de Dados Cloudflare D1
 
-Este projeto utiliza o [Wrangler](https://developers.cloudflare.com/workers/wrangler/), a CLI da Cloudflare, para interagir com o D1 localmente.
+Este projeto utiliza o [Wrangler](https://developers.cloudflare.com/workers/wrangler/), a CLI da Cloudflare.
 
 **a. Autenticação no Wrangler:**
 ```bash
 npx wrangler login
 ```
 
-**b. Criar o Banco de Dados D1 (se ainda não existir na Cloudflare):**
+**b. Criar o Banco de Dados D1 (se ainda não existir):**
 ```bash
 # O nome 'personal' já está configurado no wrangler.toml
 npx wrangler d1 create personal
@@ -85,8 +100,7 @@ npx wrangler d1 execute personal --file=./db/schema.sql
 ```
 
 **d. Iniciar o Servidor de Desenvolvimento:**
-O comando `dev` utiliza `wrangler pages dev` para emular o ambiente da Cloudflare Pages, incluindo o acesso ao banco de dados D1.
-
+O comando `dev` utiliza `wrangler pages dev` para emular o ambiente da Cloudflare Pages.
 ```bash
 npm run dev
 ```
@@ -119,7 +133,7 @@ Faça o commit e push do seu código para um repositório no GitHub.
 
 ### 4. Configurar Variáveis de Ambiente em Produção
 
-1. Em `Settings` > `Environment variables`, adicione as mesmas variáveis do seu arquivo `.env.example` (`AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`, `GOOGLE_API_KEY`).
+1. Em `Settings` > `Environment variables`, adicione as mesmas variáveis do seu arquivo `.env.example` (`AUTH_SECRET`, `AUTH_GITHUB_ID`, etc.).
 2. Adicione também a variável `AUTH_URL` com a URL final do seu site.
 3. Clique em **Save and Deploy**.
 
