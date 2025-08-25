@@ -11,6 +11,8 @@ export const users = sqliteTable('users', {
   emailVerified: integer('emailVerified', { mode: 'timestamp_ms' }),
   image: text('image'),
 });
+export type User = typeof users.$inferSelect;
+
 
 export const accounts = sqliteTable(
   'accounts',
@@ -68,6 +70,7 @@ export const projects = sqliteTable('projects', {
     repoUrl: text('repoUrl'),
     createdAt: integer('createdAt', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
+export type Project = typeof projects.$inferSelect;
 
 
 export const blogPosts = sqliteTable('blog_posts', {
@@ -78,6 +81,8 @@ export const blogPosts = sqliteTable('blog_posts', {
     publishedAt: integer('publishedAt', { mode: 'timestamp' }).notNull(),
     authorId: text('authorId').notNull().references(() => users.id, { onDelete: 'cascade' }),
 });
+export type BlogPost = typeof blogPosts.$inferSelect;
+
 
 // Relações
 export const blogPostsRelations = relations(blogPosts, ({ one }) => ({

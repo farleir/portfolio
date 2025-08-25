@@ -1,7 +1,9 @@
 
-# Portfólio Pessoal & Blog - @farleir
+# Portfólio Pessoal & Blog - @farleir (Next.js Edition)
 
 Este é o código-fonte completo para um portal pessoal, blog e área de projetos, construído com uma stack moderna e de alta performance, projetada para ser implantada na infraestrutura serverless da Cloudflare.
+
+Esta versão segue estritamente as melhores práticas do Next.js App Router, priorizando segurança, performance e qualidade de código.
 
 ## Stack Tecnológica
 
@@ -12,6 +14,7 @@ Este é o código-fonte completo para um portal pessoal, blog e área de projeto
 - **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
 - **Autenticação**: [Auth.js v5](https://authjs.dev/)
 - **Estilização e UI**: [Tailwind CSS](https://tailwindcss.com/) + [Shadcn/ui](https://ui.shadcn.com/)
+- **IA**: [Google Gemini API](https://ai.google.dev/) (executada de forma segura no servidor via Server Actions)
 
 ---
 
@@ -50,12 +53,14 @@ cp .env.example .env.local
 ```env
 # Segredo para Auth.js (gere um com `openssl rand -base64 32`)
 AUTH_SECRET="SEU_AUTH_SECRET"
+AUTH_URL="http://localhost:8788"
 
 # Provedor de Autenticação GitHub
 AUTH_GITHUB_ID="SEU_GITHUB_CLIENT_ID"
 AUTH_GITHUB_SECRET="SEU_GITHUB_CLIENT_SECRET"
 
-# Dica: Para o login com "Credentials", não são necessárias variáveis extras.
+# Chave de API para o Assistente de IA
+GOOGLE_API_KEY="SUA_CHAVE_DA_API_GEMINI"
 ```
 
 ### 5. Configurar o Banco de Dados Cloudflare D1
@@ -79,25 +84,8 @@ Execute o schema inicial no seu banco de dados D1 na Cloudflare.
 npx wrangler d1 execute personal --file=./db/schema.sql
 ```
 
-**d. Sincronizar o Drizzle com o Schema:**
-O Drizzle Kit irá gerar os arquivos de migração com base no seu schema em `db/schema.ts`.
-```bash
-npm run db:generate
-```
-
-**e. Aplicar Migrações (Push):**
-Este comando aplica as alterações do schema ao seu banco de dados D1 local e remoto.
-```bash
-# Para o banco local (usado por `npm run dev`)
-npm run db:push
-
-# Para o banco remoto (produção)
-npx wrangler d1 execute personal --file=./drizzle/0000_.../migration.sql
-```
-
-### 6. Iniciar o Servidor de Desenvolvimento
-
-O comando `dev` utiliza `wrangler pages dev` para emular o ambiente da Cloudflare Pages, incluindo o D1.
+**d. Iniciar o Servidor de Desenvolvimento:**
+O comando `dev` utiliza `wrangler pages dev` para emular o ambiente da Cloudflare Pages, incluindo o acesso ao banco de dados D1.
 
 ```bash
 npm run dev
@@ -120,8 +108,7 @@ Faça o commit e push do seu código para um repositório no GitHub.
 3. Selecione seu repositório.
 4. Nas configurações de build, use as seguintes opções:
    - **Framework preset**: `Next.js`
-   - **Build command**: `npm run build`
-   - **Build output directory**: `.next`
+   - **Variável de ambiente NODE_VERSION**: `20` ou superior.
 
 ### 3. Vincular o Banco de Dados D1
 
@@ -132,7 +119,8 @@ Faça o commit e push do seu código para um repositório no GitHub.
 
 ### 4. Configurar Variáveis de Ambiente em Produção
 
-1. Em `Settings` > `Environment variables`, adicione as mesmas variáveis do seu arquivo `.env.local` (`AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`).
-2. Clique em **Save and Deploy**.
+1. Em `Settings` > `Environment variables`, adicione as mesmas variáveis do seu arquivo `.env.example` (`AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`, `GOOGLE_API_KEY`).
+2. Adicione também a variável `AUTH_URL` com a URL final do seu site.
+3. Clique em **Save and Deploy**.
 
 Seu site será implantado automaticamente a cada `push` na branch principal.
