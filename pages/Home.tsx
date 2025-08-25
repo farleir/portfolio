@@ -1,2 +1,2 @@
-// This file is part of the legacy SPA architecture and is not used.
-// The new home page is located at `app/page.tsx`.
+// This legacy file is deprecated and should be deleted.
+export default function DeprecatedPage() { return null; }
